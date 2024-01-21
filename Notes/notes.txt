@@ -1,0 +1,99 @@
+# Anotações Importantes
+
+- container engine: responsável pela criação do container, monitora saúdo do container, gerencia pontos de montagem disponiveis para os containers, gerencia rede dos containers (docker | podman | crio)
+
+- container runtime: é quem faz a comunicação do container engine com o Kernel. Garante a contrução do container.
+  - Existem 3 tipos:
+    - Low level: são os runtime que tem contato direto com o Kernel (runc)
+    - High level: não são executados diretamente no Kernel, dependem da intermdiação de um container engine (containerd)
+    - Sandbox: (gvisor)
+    - Virtualizado: (kata containers)
+
+- OCI (Open Container Initiative): https://opencontainers.org/
+
+- CNCF (Cloud Native Computing Foundation): https://www.cncf.io/
+
+- Abreviação i18n: http://www.i18nguy.com/origini18n.html
+
+----
+
+Portas do cluster:
+
+kube-apiserver -> 6443 -> tcp
+etcd -> 2379 e 2380 -> tcp
+kube-scheduler -> 10251 -> tcp
+kubelet -> 10250 -> tcp
+kube-controller -> 10252 -> tcp
+---
+node port -> 30000-32767 -> tcp
+
+weave net -> 6783 e 6784 -> tcp/udp
+
+----
+kind (kubernetes in docker)
+
+----
+kubectl run --image nginx --port 80 giropops --dry-run=client -o yaml > pod.yaml
+
+----
+Instalando um cluster kind no linux:
+curl -Lo .kind https://kind.sigs.k8s.io/dl/v0.14.0/kind-linux-amd64
+
+chmod +x .kind
+
+sudo mv .kind /usr/local/bin/kind
+
+cat << EOF > $HOME/meu-primeiro-cluster.yaml
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+  - role: control-plane
+  - role: worker
+  - role: worker
+  - role: worker
+EOF
+
+kind create cluster --name kind-multinodes --config $HOME/kind-3nodes.yaml
+
+kubectl cluster-info --context kind-kind-multinodes
+
+kubectl get nodes
+----
+Configurando kubectl:
+curl -LO https://storage.googleapis.com/kubernetes-release/release/`curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt`/bin/linux/amd64/kubectl
+
+chmod +x ./kubectl
+
+sudo mv ./kubectl /usr/local/bin/kubectl
+
+kubectl version --client
+
+source <(kubectl completion bash) # configura o autocomplete na sua sessão atual (antes, certifique-se de ter instalado o pacote bash-completion).
+
+echo "source <(kubectl completion bash)" >> ~/.bashrc # add autocomplete permanentemente ao seu shell.
+----
+
+#PODS
+- comunicação entre pods: por ip dentro do cluster
+- comunicação entre containers dentro de um pod: por localhost
+
+dentro do pod:
+  - hostIP: é o IP do node onde o pod esta sendo executado e esse ip é compartilhado por todos os pods em execução nesse node.
+  - podIP: é o IP que o pod recebe dentro da rede do cluster k8s, é exclusivo para cada pod
+
+Entrando em um pod em execução:
+kubectl attach giropops -c girus -it
+  - Obs: se atachar em um pod q nao tenha um tty (terminal) não será possivel executar comandos.
+ou
+kubectl exec giropops -c strigus -it -- sh
+  - cd /proc/1
+    ls
+    cat cmdline
+
+
+Teste de stress - recursos:
+apt update
+apt install -y stress
+stress --vm 1 --vm-bytes 100M
+
+----
